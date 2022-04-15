@@ -3,39 +3,73 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layout_gravity="center"
-    android:gravity="center"
+    android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <LinearLayout
+    <TextView
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:textColor="#000000"
+        android:fontFamily="sans-serif-thin"
+        android:textSize="18dp"
+        android:text="Control your home equipments"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <TextView
-            android:id="@+id/titleTxt"
+
+        <com.agrawalsuneet.dotsloader.loaders.TashieLoader
+            android:layout_marginTop="150dp"
+            android:id="@+id/tashieLoaderID"
+            android:visibility="invisible"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            app:tashieloader_animDelay="60"
+            app:tashieloader_animDur="300"
+            app:tashieloader_dotsColor="#ff00"
+            app:tashieloader_dotsDist="5dp"
+            app:tashieloader_dotsRadius="10dp"
+            app:tashieloader_interpolator="@android:anim/accelerate_interpolator"
+            app:tashieloader_noOfDots="4" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/titleTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <androidx.cardview.widget.CardView
+            android:layout_marginTop="160sp"
+            android:elevation="40dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            app:cardCornerRadius="20dp"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+
+            <ImageView
+                android:elevation="20dp"
+                android:src="@drawable/mic1"
+                android:id="@+id/playpause"
+                android:layout_width="150dp"
+                android:layout_height="150dp"/>
+
+
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
 
-    <androidx.cardview.widget.CardView
-        android:elevation="40dp"
-        android:gravity="center"
-        android:layout_gravity="center"
-        app:cardCornerRadius="20dp"
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
 
 
-<ImageView
-    android:elevation="20dp"
-            android:src="@drawable/mic1"
-            android:id="@+id/playpause"
-            android:layout_width="150dp"
-            android:layout_height="150dp"/>
-
-
-    </androidx.cardview.widget.CardView>
 
 </LinearLayout>

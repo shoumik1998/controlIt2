@@ -28,12 +28,12 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.reflect.Array;
+import com.agrawalsuneet.dotsloader.loaders.TashieLoader;
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements ActionPlaying , ServiceConnection {
@@ -42,10 +42,11 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
     TextView titleTxt;
     int position;
     boolean isPlaying=false;
-    MusicService musicService;
+    VoiceService musicService;
     MediaSessionCompat mediaSessionCompat;
     SpeechRecognizer speechRecognizerl;
     Intent spechrecognzerIntent;
+    TashieLoader tashieLoader;
 
     ArrayList<TrackFiles> trackFilesArrayList=new ArrayList<>();
 
@@ -69,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
 
         playPause=findViewById(R.id.playpause);
-
+        tashieLoader=findViewById(R.id.tashieLoaderID);
         titleTxt=findViewById(R.id.titleTxt);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -79,8 +80,8 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         speechRecognizerl=SpeechRecognizer.createSpeechRecognizer(this);
          spechrecognzerIntent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 
-        poppulateFiles();
-        titleTxt.setText(trackFilesArrayList.get(position).getTitle());
+
+
         mediaSessionCompat=new MediaSessionCompat(this,"PlayerAudio");
 
 
@@ -89,10 +90,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-
                 playClicked();
-
 
             }
         });
@@ -121,6 +119,9 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
             @Override
             public void onEndOfSpeech() {
+                tashieLoader.setVisibility(View.INVISIBLE);
+                showNotification(R.drawable.mic_24);
+                isPlaying=true;
 
 
 
@@ -135,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             public void onResults(Bundle bundle) {
                 ArrayList<String> data = bundle.getStringArrayList(speechRecognizerl.RESULTS_RECOGNITION);
                 titleTxt.setText(data.get(0));
-                Toast.makeText(MainActivity.this, data.get(0), Toast.LENGTH_SHORT).show();
+
             }
 
             @Override
@@ -156,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
     @Override
     protected void onResume() {
         super.onResume();
-        Intent intent=new Intent(this,MusicService.class);
+        Intent intent=new Intent(this, VoiceService.class);
         bindService(intent,this,BIND_AUTO_CREATE);
 
     }
@@ -167,81 +168,49 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 //        unbindService(this);
 //    }
 
-    private  void poppulateFiles(){
-
-        TrackFiles trackFiles=new TrackFiles("Faded","faded Singer",R.drawable.bird);
-        trackFilesArrayList.add(trackFiles);
-        TrackFiles trackFiles1=new TrackFiles("illenium","Illenium Singer",R.drawable.flower);
-        trackFilesArrayList.add(trackFiles1);
-        TrackFiles trackFiles2=new TrackFiles("I am","I am  Singer",R.drawable.spider);
-        trackFilesArrayList.add(trackFiles2);
-        TrackFiles trackFiles3=new TrackFiles("I am back","I am back Singer",R.drawable.trees);
-        trackFilesArrayList.add(trackFiles3);
 
 
 
 
 
-
-    }
-
-    @Override
-    public void nextClicked() {
-        if(position==3)
-            position=0;
-        else
-            position++;
-        titleTxt.setText(trackFilesArrayList.get(position).getTitle());
-
-        if (!isPlaying)
-            showNotification(R.drawable.play_circle_filled_24);
-        else
-            showNotification(R.drawable.pause_circle_filled_24);
-
-    }
-
-    @Override
-    public void prevClicked() {
-        if(position==0)
-            position=3;
-        else
-            position--;
-        titleTxt.setText(trackFilesArrayList.get(position).getTitle());
-
-        if (!isPlaying)
-            showNotification(R.drawable.play_circle_filled_24);
-
-
-        else
-            showNotification(R.drawable.pause_circle_filled_24);
-
-    }
 
     @Override
     public void playClicked() {
-        if (!isPlaying) {
+        //if (!isPlaying) {
             isPlaying=true;
             speechRecognizerl.startListening(spechrecognzerIntent);
-            playPause.setImageResource(R.drawable.mic_24);
+            playPause.setImageResource(R.drawable.mic1);
             showNotification(R.drawable.mic_24);
+            tashieLoader.setVisibility(View.VISIBLE);
             //Toast.makeText(MainActivity.this, "Play", Toast.LENGTH_SHORT).show();
 
 
 
-        }else {
-            isPlaying=false;
-            speechRecognizerl.stopListening();
-            playPause.setImageResource(R.drawable.mic1);
-            showNotification(R.drawable.mic_off_24);
-            Toast.makeText(MainActivity.this, "Pause", Toast.LENGTH_SHORT).show();
+//        }else {
+//            isPlaying=false;
+//            speechRecognizerl.stopListening();
+//            playPause.setImageResource(R.drawable.mic1);
+//            showNotification(R.drawable.mic_off_24);
+//            tashieLoader.setVisibility(View.GONE);
+//            Toast.makeText(MainActivity.this, "Pause", Toast.LENGTH_SHORT).show();
+//
+//        }
 
-        }
+    }
+
+    @Override
+    public void playClickedNotification() {
+        isPlaying=true;
+        speechRecognizerl.startListening(spechrecognzerIntent);
+        playPause.setImageResource(R.drawable.mic1);
+        showNotification(R.drawable.mic_off_24);
+        tashieLoader.setVisibility(View.VISIBLE);
 
     }
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-        MusicService.MyBinder binder= (MusicService.MyBinder) iBinder;
+        VoiceService.MyBinder binder= (VoiceService.MyBinder) iBinder;
         musicService=binder.getService();
         musicService.setCallBack(MainActivity.this);
         //titleTxt.setText(musicService.getRand());
@@ -260,26 +229,20 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         Intent intent =new Intent(this,MainActivity.class);
         PendingIntent contentinten=PendingIntent.getActivity(this,0,intent,0);
 
-        Intent previntent=new Intent(this,NotificationReceiver.class)
-                .setAction(ACTION_PREV);
-        PendingIntent prevpendingIntent=PendingIntent.getBroadcast(this,0,previntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+
 
         Intent playintent=new Intent(this,NotificationReceiver.class)
                 .setAction(ACTION_PLAY);
         PendingIntent playpendingIntent=PendingIntent.getBroadcast(this,0,playintent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent nextintent=new Intent(this,NotificationReceiver.class)
-                .setAction(ACTION_NEXT);
-        PendingIntent nextpendingIntent=PendingIntent.getBroadcast(this,0,nextintent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
+
 
         Bitmap picture= BitmapFactory.decodeResource(getResources(),
                 R.drawable.arduino);
 
         Notification notification=new NotificationCompat.Builder(this,CHANNEL_ID_2)
-                .setSmallIcon(trackFilesArrayList.get(position).getThumbnail())
+                .setSmallIcon(R.drawable.arduino)
                 .setLargeIcon(picture)
                 .setContentTitle("Control It")
                 .setContentText("Control your equipments")

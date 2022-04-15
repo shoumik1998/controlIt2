@@ -21,7 +21,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".MusicService" android:enabled="true"/>
+        <service android:name=".VoiceService" android:enabled="true"/>
         <receiver android:name=".NotificationReceiver"
             android:exported="true"
             android:enabled="true">
