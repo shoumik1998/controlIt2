@@ -11,6 +11,7 @@ public class ApplicationClass extends Application {
     public static final String CHANNEL_ID_2="channel2";
     public static final String ACTION_NEXT="NEXT";
     public static final String ACTION_PLAY="PLAY";
+    public static final String ACTION_DISMISS="DISMISS";
     public static final String ACTION_PREV="PREVIOUS";
 
 

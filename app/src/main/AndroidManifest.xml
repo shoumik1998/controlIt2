@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.player">
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
         android:name=".ApplicationClass"
@@ -13,6 +19,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Player">
         <activity
+            android:name=".ConnectedDevice"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
@@ -21,14 +30,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".VoiceService" android:enabled="true"/>
-        <receiver android:name=".NotificationReceiver"
-            android:exported="true"
-            android:enabled="true">
+
+        <service
+            android:foregroundServiceType="dataSync"
+            android:name=".VoiceService"
+            android:enabled="true" />
+
+        <receiver
+            android:name=".NotificationReceiver"
+            android:enabled="true"
+            android:exported="true">
             <intent-filter>
-                <action android:name="NEXT"/>
-                <action android:name="PREVIOUS"/>
-                <action android:name="PLAY"/>
+                <action android:name="NEXT" />
+                <action android:name="PREVIOUS" />
+                <action android:name="PLAY" />
             </intent-filter>
         </receiver>
     </application>

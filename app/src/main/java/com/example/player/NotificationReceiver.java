@@ -6,6 +6,7 @@ import android.content.Intent;
 
 public class NotificationReceiver extends BroadcastReceiver {
     public static final String ACTION_PLAY="PLAY";
+    public static final String ACTION_DISMISS="DISMISS";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -17,6 +18,10 @@ public class NotificationReceiver extends BroadcastReceiver {
                     context.startService(intent1);
                     break;
 
+                case ACTION_DISMISS:
+                    intent1.putExtra("myActionName",intent.getAction());
+                    context.startService(intent1);
+                    break;
 
             }
         }
