@@ -32,7 +32,7 @@
         </activity>
 
         <service
-            android:foregroundServiceType="dataSync"
+            android:foregroundServiceType="connectedDevice"
             android:name=".VoiceService"
             android:enabled="true" />
 

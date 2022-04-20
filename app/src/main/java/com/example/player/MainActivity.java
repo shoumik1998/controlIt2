@@ -15,8 +15,14 @@ import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -36,11 +42,15 @@ import android.widget.Toast;
 
 import com.agrawalsuneet.dotsloader.loaders.TashieLoader;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.UUID;
 
 import io.paperdb.Paper;
 
-public class MainActivity extends AppCompatActivity implements ActionPlaying , ServiceConnection {
+public class MainActivity extends AppCompatActivity implements ActionPlaying , ServiceConnection , ConnectedDeviceInterface {
 
     ImageView  playPause,connectedDeviceImg;
     TextView titleTxt;
@@ -52,6 +62,16 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
     Intent spechrecognzerIntent;
     TashieLoader tashieLoader;
     Intent intent;
+    BluetoothAdapter adapter;
+    String MACaddress="";
+    MainActivity activity;
+    UUID myUUID;
+    BluetoothDevice device;
+    BluetoothSocket socket;
+    OutputStream outputStream;
+    String message="";
+    boolean status=false;
+
 
     ArrayList<TrackFiles> trackFilesArrayList=new ArrayList<>();
 
@@ -72,18 +92,36 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        activity = MainActivity.this;
+        adapter=BluetoothAdapter.getDefaultAdapter();
+        myUUID=UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-//        Paper.init(this);
-//        if (Paper.book().contains("mcaddress")) {
-//            if (Paper.book().read("mcaddress") == "") {
-//                startActivity(new Intent(MainActivity.this, ConnectedDevice.class));
-//            }
-//        } else {
-//            Paper.book().write("mcaddress", "");
-//            startActivity(new Intent(MainActivity.this, ConnectedDevice.class));
-//        }
-//        startActivity(new Intent(MainActivity.this,ConnectedDevice.class));
+        Paper.init(this);
+        if (Paper.book().contains("mcaddress")) {
+            if (Paper.book().read("mcaddress") == "") {
+
+            }
+        } else {
+            Paper.book().write("mcaddress", "");
+
+        }
+
         intent=new Intent(getApplicationContext(),VoiceService.class);
+
+        if (socket == null) {
+            if (adapter.isEnabled()) {
+                socketConnection();
+
+
+            } else {
+                adapter.enable();
+                socketConnection();
+
+            }
+        }
+
+
+
 
 
 
@@ -112,9 +150,13 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             public void onClick(View view) {
                 playClicked();
 
-                intent.putExtra("myActionName", "START_R");
-                ContextCompat.startForegroundService(MainActivity.this,intent);
-                voiceService.status=true;
+                if (status == false) {
+                    intent.putExtra("myActionName", "START_R");
+                    ContextCompat.startForegroundService(MainActivity.this,intent);
+                    voiceService.status=true;
+                    status = true;
+                }
+
 
             }
         });
@@ -165,8 +207,17 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
             @Override
             public void onResults(Bundle bundle) {
-                ArrayList<String> data = bundle.getStringArrayList(speechRecognizerl.RESULTS_RECOGNITION);
-                titleTxt.setText(data.get(0));
+                String data = bundle.getStringArrayList(speechRecognizerl.RESULTS_RECOGNITION).get(0);
+                message=String.format("*%s#", data);
+                titleTxt.setText(data);
+                try {
+                    if (outputStream != null) {
+                        outputStream.write(message.getBytes());
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
             }
 
@@ -243,6 +294,15 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
     @Override
     public void closeService() {
         voiceService.stopForeground(true);
+        try {
+
+                socket.close();
+                Log.i("socket ", "Socket closed");
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -257,6 +317,8 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         VoiceService.MyBinder binder= (VoiceService.MyBinder) iBinder;
         voiceService =binder.getService();
         voiceService.setCallBack(MainActivity.this);
+        voiceService.setCallBackBluetooth(MainActivity.this);
+
         //titleTxt.setText(musicService.getRand());
 
 
@@ -315,5 +377,142 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
 
 
 
+    }
+
+    @Override
+    public void discoverDevices() {
+        Toast.makeText(MainActivity.this, "hmm ok", Toast.LENGTH_SHORT).show();
+
+    }
+
+    @Override
+    public void pairDevices() {
+        Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
+        if (pairedDevices.size() > 0) {
+            for (BluetoothDevice device : pairedDevices) {
+                if (device.getName().equals("HC-05")) {
+                    MACaddress = device.getAddress();
+                    Paper.book().write("mcaddress",MACaddress);
+                }
+            }
+        }
+
+    }
+
+    @Override
+    public void connectDevices() {
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (device.getName().equals("HC-05")) {
+                        MACaddress = device.getAddress();
+                        Paper.book().write("mcaddress",MACaddress);
+                        adapter.cancelDiscovery();
+                    }
+                }
+            }
+        };
+        activity.registerReceiver(broadcastReceiver, filter);
+        int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
+        /* Permission for Bluetooth search */
+        ActivityCompat.requestPermissions(activity,
+                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
+        adapter.startDiscovery();
+
+    }
+
+    @Override
+    public void socketConnection() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                connectDevices();
+                pairDevices();
+                if (MACaddress != "") {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            titleTxt.setText(MACaddress);
+                        }
+                    });
+
+                    device = adapter.getRemoteDevice(MACaddress);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                socket = device.createRfcommSocketToServiceRecord(myUUID);
+                                if (!socket.isConnected()) {
+                                    socket.connect();
+                                }
+
+                                if (socket.isConnected()) {
+                                     outputStream = socket.getOutputStream();
+                                    Log.i("Socket", "Socket connected");
+
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            titleTxt.setText("socket is  connected");
+                                        }
+                                    });
+
+                                }else {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            titleTxt.setText("socket is not connected");
+                                        }
+                                    });
+                                }
+                            } catch (IOException e) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        titleTxt.setText(e.toString());
+                                    }
+                                });
+
+                            }
+                        }
+                    }).start();
+
+                } else {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getBaseContext(), "device not found", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        titleTxt.setText(MACaddress);
+                    }
+                });
+            }
+        }).start();
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+       // if (status==false) {
+            if (socket.isConnected() || socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+       // }
     }
 }

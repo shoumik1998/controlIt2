@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -12,12 +13,11 @@ import java.util.Random;
 
 public class VoiceService extends Service {
     private  IBinder mBinder= new MyBinder();
-    boolean status;
+    boolean status=false;
 
     public static final String ACTION_PLAY="PLAY";
     public static final String ACTION_DISMISS="DISMISS";
-
-
+    ConnectedDeviceInterface deviceInterface;
     ActionPlaying actionPlaying;
 
     @Nullable
@@ -60,7 +60,7 @@ public class VoiceService extends Service {
                     break;
                 case ACTION_DISMISS:
                     if (actionPlaying != null) {
-                        //actionPlaying.closeService();
+                        actionPlaying.closeService();
                         status=false;
                         stopForeground(true);
                         stopService(intent);
@@ -68,30 +68,36 @@ public class VoiceService extends Service {
                     }
                     break;
                     case "START_R":
-                    if (actionPlaying != null) {
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
+                        if (deviceInterface != null) {
+                            deviceInterface.socketConnection();
+//                            new Thread(new Runnable() {
+//                                @Override
+//                                public void run() {
+//
+//                                    while (status) {
+//                                        // deviceInterface.socketConnection();
+//
+//
+////                                    try {
+////
+////                                        Thread.sleep(1000);
+////                                        if (status) {
+////                                            int number=new Random().nextInt(100)+0;
+////                                            Log.i("Random number", String.valueOf(number));
+////                                        }
+////
+////                                    } catch (InterruptedException e) {
+////                                        e.printStackTrace();
+////                                    }
+//
+//
+//                                    }
+//                                }
+//                            }).start();
 
-                                while (status) {
-                                    try {
-
-                                        Thread.sleep(1000);
-                                        if (status) {
-                                            int number=new Random().nextInt(100)+0;
-                                            Log.i("Random number", String.valueOf(number));
-                                        }
-
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-
-
-                                }
-                            }
-                        }).start();
-
-                    }
+                        } else {
+                            Toast.makeText(getApplicationContext(), "null object", Toast.LENGTH_SHORT).show();
+                        }
                     break;
 
             }
@@ -110,4 +116,9 @@ public class VoiceService extends Service {
     public  void  setCallBack(ActionPlaying actionPlaying){
         this.actionPlaying=actionPlaying;
     }
+
+    public  void  setCallBackBluetooth(ConnectedDeviceInterface connectedDeviceInterface){
+        deviceInterface = connectedDeviceInterface;
+    }
+
 }

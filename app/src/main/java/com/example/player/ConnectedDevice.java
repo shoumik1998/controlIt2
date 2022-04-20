@@ -8,10 +8,14 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,7 +25,7 @@ import java.util.UUID;
 
 import io.paperdb.Paper;
 
-public class ConnectedDevice extends AppCompatActivity implements ConnectedDeviceInterface {
+public class ConnectedDevice extends AppCompatActivity implements ConnectedDeviceInterface, ServiceConnection {
 
     TextView statetxt;
     BluetoothAdapter adapter;
@@ -30,6 +34,7 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
     UUID myUUID;
     BluetoothDevice device;
     BluetoothSocket socket;
+    VoiceService voiceService;
 
 
 
@@ -44,11 +49,11 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
         adapter=BluetoothAdapter.getDefaultAdapter();
 
         if (adapter.isEnabled()) {
-            threadRun();
+            socketConnection();
 
         } else {
             adapter.enable();
-            threadRun();
+            socketConnection();
         }
 
 
@@ -103,7 +108,8 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
                 MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
         adapter.startDiscovery();
     }
-    public void  threadRun(){
+    @Override
+    public void socketConnection(){
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -129,6 +135,7 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
 
                                 if (socket.isConnected()) {
                                    // outputStream = socket.getOutputStream();
+                                    Log.i("Socket", "Socket connected");
 
                                     runOnUiThread(new Runnable() {
                                         @Override
@@ -180,6 +187,7 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
 
     @Override
     public void discoverDevices() {
+        Toast.makeText(getApplicationContext(), "triggered connected", Toast.LENGTH_SHORT).show();
 
 
     }
@@ -191,6 +199,20 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
 
     @Override
     public void connectDevices() {
+
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        VoiceService.MyBinder binder= (VoiceService.MyBinder) iBinder;
+        voiceService =binder.getService();
+        voiceService.setCallBackBluetooth(ConnectedDevice.this);
+
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+        voiceService = null;
 
     }
 }
