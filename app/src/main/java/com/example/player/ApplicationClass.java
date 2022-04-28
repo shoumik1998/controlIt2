@@ -4,6 +4,7 @@ import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
+import android.widget.Toast;
 
 public class ApplicationClass extends Application {
 
@@ -24,17 +25,18 @@ public class ApplicationClass extends Application {
 
     private  void createNotificationChannel(){
         if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O) {
-            NotificationChannel notificationChannel1=new NotificationChannel(CHANNEL_ID_1,
-                    "channel (1)", NotificationManager.IMPORTANCE_HIGH);
-            notificationChannel1.setDescription("channel 1 Description");
+//            NotificationChannel notificationChannel1=new NotificationChannel(CHANNEL_ID_1,
+//                    "channel (1)", NotificationManager.IMPORTANCE_HIGH);
+//            notificationChannel1.setDescription("channel 1 Description");
 
             NotificationChannel notificationChannel2=new NotificationChannel(CHANNEL_ID_2,
-                    "channel (2)",NotificationManager.IMPORTANCE_HIGH);
+                    "channel (2)",NotificationManager.IMPORTANCE_DEFAULT);
             notificationChannel2.setDescription(" channel 2 description");
 
             NotificationManager notificationManager=getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(notificationChannel1);
+           // notificationManager.createNotificationChannel(notificationChannel1);
             notificationManager.createNotificationChannel(notificationChannel2);
+
         }
     }
 }

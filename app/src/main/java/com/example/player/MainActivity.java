@@ -2,6 +2,7 @@ package com.example.player;
 
 import static com.example.player.ApplicationClass.ACTION_DISMISS;
 import static com.example.player.ApplicationClass.ACTION_PLAY;
+import static com.example.player.ApplicationClass.CHANNEL_ID_1;
 import static com.example.player.ApplicationClass.CHANNEL_ID_2;
 
 import androidx.annotation.NonNull;
@@ -9,6 +10,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
@@ -44,6 +46,7 @@ import com.agrawalsuneet.dotsloader.loaders.TashieLoader;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
@@ -65,15 +68,15 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
     BluetoothAdapter adapter;
     String MACaddress="";
     MainActivity activity;
-    UUID myUUID;
-    BluetoothDevice device;
-    BluetoothSocket socket;
-    OutputStream outputStream;
+    public static  UUID myUUID;
+    public static BluetoothDevice device;
+    public static  BluetoothSocket socket;
+    public static  OutputStream outputStream;
     String message="";
     boolean status=false;
 
 
-    ArrayList<TrackFiles> trackFilesArrayList=new ArrayList<>();
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -105,31 +108,34 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             Paper.book().write("mcaddress", "");
 
         }
+        if (Paper.book().contains("serviceOn")) {
+            if (Paper.book().read("serviceOn").equals("") || Paper.book().read("serviceOn").equals(null)) {
+                Paper.book().write("serviceOn", "off");
+
+            }
+        } else {
+            Paper.book().write("serviceOn", "off");
+
+
+        }
 
         intent=new Intent(getApplicationContext(),VoiceService.class);
 
-        if (socket == null) {
-            if (adapter.isEnabled()) {
-                socketConnection();
-
-
-            } else {
-                adapter.enable();
-                socketConnection();
-
+        if (Paper.book().read("serviceOn").equals("off")) {
+            if (socket == null) {
+                if (adapter.isEnabled()) {
+                    socketConnection();
+                } else {
+                    adapter.enable();
+                    socketConnection();
+                }
             }
+        } else {
         }
-
-
-
-
-
-
         playPause=findViewById(R.id.playpause);
         tashieLoader=findViewById(R.id.tashieLoaderID);
         titleTxt=findViewById(R.id.titleTxt);
         connectedDeviceImg = findViewById(R.id.CDimgID);
-
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.RECORD_AUDIO},1);
         }
@@ -148,16 +154,13 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
             @Override
             public void onClick(View view) {
-                playClicked();
 
-                if (status == false) {
+                if (Paper.book().read("serviceOn").equals("off")) {
                     intent.putExtra("myActionName", "START_R");
                     ContextCompat.startForegroundService(MainActivity.this,intent);
-                    voiceService.status=true;
-                    status = true;
+                    Paper.book().write("serviceOn", "on");
                 }
-
-
+                playClicked();
             }
         });
 
@@ -216,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
                     }
 
                 } catch (IOException e) {
-                    e.printStackTrace();
+
                 }
 
             }
@@ -234,6 +237,8 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
 
 
+
+
     }
 
     @Override
@@ -244,40 +249,16 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
     }
 
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        unbindService(this);
-//    }
-
-
-
-
-
 
 
     @Override
     public void playClicked() {
-        //if (!isPlaying) {
+
             isPlaying=true;
             speechRecognizerl.startListening(spechrecognzerIntent);
             playPause.setImageResource(R.drawable.mic1);
             showNotification(R.drawable.mic_24);
             tashieLoader.setVisibility(View.VISIBLE);
-
-
-
-
-
-//        }else {
-//            isPlaying=false;
-//            speechRecognizerl.stopListening();
-//            playPause.setImageResource(R.drawable.mic1);
-//            showNotification(R.drawable.mic_off_24);
-//            tashieLoader.setVisibility(View.GONE);
-//            Toast.makeText(MainActivity.this, "Pause", Toast.LENGTH_SHORT).show();
-//
-//        }
 
     }
 
@@ -293,24 +274,30 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
     @Override
     public void closeService() {
-        voiceService.stopForeground(true);
-        try {
+        Paper.book().write("serviceOn", "off");
+        if (  socket != null) {
+            if (socket.isConnected()) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
-                socket.close();
-                Log.i("socket ", "Socket closed");
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+        voiceService.stopForeground(true);
+        Toast.makeText(getApplicationContext(), "dismissed", Toast.LENGTH_SHORT).show();
+       myUUID=null;
+         device=null;
+         socket=null;
+         outputStream=null;
+         finish();
 
     }
 
-    @Override
-    public void test(int number) {
-        titleTxt.setText(String.valueOf(number));
 
-    }
+
+
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -352,9 +339,10 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
         Bitmap picture= BitmapFactory.decodeResource(getResources(),
                 R.drawable.arduino);
 
-        Notification notification=new NotificationCompat.Builder(this,CHANNEL_ID_2)
+       Notification notification=new NotificationCompat.Builder(this,CHANNEL_ID_2)
                 .setSmallIcon(R.drawable.arduino)
                 .setLargeIcon(picture)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentTitle("Control It")
                 .setContentText("Control your equipments")
                 .setColor(getResources().getColor(R.color.black))
@@ -367,21 +355,11 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
                 .setOnlyAlertOnce(true)
                 .build();
 
-//        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-//        notificationManager.notify(0,notification);
-
         voiceService.startForeground(1,notification);
-
-
-
-
-
-
     }
 
     @Override
     public void discoverDevices() {
-        Toast.makeText(MainActivity.this, "hmm ok", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -418,7 +396,6 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
         };
         activity.registerReceiver(broadcastReceiver, filter);
         int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
-        /* Permission for Bluetooth search */
         ActivityCompat.requestPermissions(activity,
                 new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                 MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION);
@@ -428,18 +405,19 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
 
     @Override
     public void socketConnection() {
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 connectDevices();
                 pairDevices();
                 if (MACaddress != "") {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            titleTxt.setText(MACaddress);
-                        }
-                    });
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            titleTxt.setText(MACaddress);
+//                        }
+//                    });
 
                     device = adapter.getRemoteDevice(MACaddress);
                     new Thread(new Runnable() {
@@ -453,30 +431,30 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
 
                                 if (socket.isConnected()) {
                                      outputStream = socket.getOutputStream();
-                                    Log.i("Socket", "Socket connected");
 
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            titleTxt.setText("socket is  connected");
-                                        }
-                                    });
+
+//                                    runOnUiThread(new Runnable() {
+//                                        @Override
+//                                        public void run() {
+//                                            titleTxt.setText("socket is  connected");
+//                                        }
+//                                    });
 
                                 }else {
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            titleTxt.setText("socket is not connected");
-                                        }
-                                    });
+//                                    runOnUiThread(new Runnable() {
+//                                        @Override
+//                                        public void run() {
+//                                            titleTxt.setText("socket is not connected");
+//                                        }
+//                                    });
                                 }
                             } catch (IOException e) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        titleTxt.setText(e.toString());
-                                    }
-                                });
+//                                runOnUiThread(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//                                        titleTxt.setText(e.toString());
+//                                    }
+//                                });
 
                             }
                         }
@@ -491,28 +469,39 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
                     });
 
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        titleTxt.setText(MACaddress);
-                    }
-                });
+//                runOnUiThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        titleTxt.setText(MACaddress);
+//                    }
+//                });
             }
         }).start();
 
     }
 
     @Override
+    public void stayConnection() {
+
+
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
-       // if (status==false) {
-            if (socket.isConnected() || socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        if (Paper.book().read("serviceOn").equals("off")) {
+            if (  socket != null) {
+                if (socket.isConnected()) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
+
             }
-       // }
+        }
+
+
     }
 }

@@ -5,5 +5,6 @@ public interface ConnectedDeviceInterface {
     void  pairDevices();
     void  connectDevices();
     void  socketConnection();
+    void  stayConnection();
 
 }

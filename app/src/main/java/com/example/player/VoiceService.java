@@ -61,55 +61,16 @@ public class VoiceService extends Service {
                 case ACTION_DISMISS:
                     if (actionPlaying != null) {
                         actionPlaying.closeService();
-                        status=false;
-                        stopForeground(true);
-                        stopService(intent);
+//                        status=false;
+//                        stopForeground(true);
+//                        stopService(intent);
 
                     }
                     break;
-                    case "START_R":
-                        if (deviceInterface != null) {
-                            deviceInterface.socketConnection();
-//                            new Thread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//
-//                                    while (status) {
-//                                        // deviceInterface.socketConnection();
-//
-//
-////                                    try {
-////
-////                                        Thread.sleep(1000);
-////                                        if (status) {
-////                                            int number=new Random().nextInt(100)+0;
-////                                            Log.i("Random number", String.valueOf(number));
-////                                        }
-////
-////                                    } catch (InterruptedException e) {
-////                                        e.printStackTrace();
-////                                    }
-//
-//
-//                                    }
-//                                }
-//                            }).start();
 
-                        } else {
-                            Toast.makeText(getApplicationContext(), "null object", Toast.LENGTH_SHORT).show();
-                        }
-                    break;
 
             }
         }
-
-
-
-
-
-
-
-
         return START_STICKY;
     }
 

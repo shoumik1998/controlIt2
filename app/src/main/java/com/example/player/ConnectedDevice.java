@@ -48,6 +48,8 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
         activity=ConnectedDevice.this;
         adapter=BluetoothAdapter.getDefaultAdapter();
 
+
+
         if (adapter.isEnabled()) {
             socketConnection();
 
@@ -63,8 +65,11 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
     protected void onDestroy() {
         super.onDestroy();
         try {
-            if (socket.isConnected() || socket!=null) {
-                socket.close();
+            if (  socket!=null) {
+                if (socket.isConnected()) {
+                    socket.close();
+                }
+
 
             }
 
@@ -156,7 +161,7 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        statetxt.setText(e.toString());
+
                                     }
                                 });
 
@@ -183,6 +188,10 @@ public class ConnectedDevice extends AppCompatActivity implements ConnectedDevic
         }).start();
     }
 
+    @Override
+    public void stayConnection() {
+
+    }
 
 
     @Override
