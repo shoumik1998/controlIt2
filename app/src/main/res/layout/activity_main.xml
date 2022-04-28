@@ -15,25 +15,13 @@
         <TextView
             android:layout_gravity="center"
             android:gravity="center"
-            android:textColor="#000000"
             android:fontFamily="sans-serif-thin"
             android:textSize="18dp"
             android:text="Control your home equipments"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <ImageView
-            android:id="@+id/CDimgID"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:elevation="10dp"
-            android:layout_width="50dp"
-            android:layout_height="71dp"
-            android:layout_marginLeft="50dp"
-            android:layout_marginTop="10dp"
-            android:adjustViewBounds="true"
-            android:scaleType="centerInside"
-            android:src="@drawable/bluetooth" />
+
 
 
     </LinearLayout>
@@ -48,6 +36,24 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <LinearLayout
+            android:layout_marginTop="30dp"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/titleTxt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <ProgressBar
+                android:foregroundGravity="center"
+                android:id="@+id/progressBarID"
+                android:layout_gravity="center"
+                android:layout_width="20dp"
+                android:layout_height="20dp"/>
+
+        </LinearLayout>
         <com.agrawalsuneet.dotsloader.loaders.TashieLoader
             android:layout_marginTop="150dp"
             android:id="@+id/tashieLoaderID"
@@ -62,14 +68,7 @@
             app:tashieloader_interpolator="@android:anim/accelerate_interpolator"
             app:tashieloader_noOfDots="4" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <TextView
-                android:id="@+id/titleTxt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
+
 
 
 

@@ -39,9 +39,11 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.agrawalsuneet.dotsloader.loaders.CircularDotsLoader;
 import com.agrawalsuneet.dotsloader.loaders.TashieLoader;
 
 import java.io.IOException;
@@ -55,7 +57,7 @@ import io.paperdb.Paper;
 
 public class MainActivity extends AppCompatActivity implements ActionPlaying , ServiceConnection , ConnectedDeviceInterface {
 
-    ImageView  playPause,connectedDeviceImg;
+    ImageView  playPause;
     TextView titleTxt;
     int position;
     boolean isPlaying=false;
@@ -64,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
     SpeechRecognizer speechRecognizerl;
     Intent spechrecognzerIntent;
     TashieLoader tashieLoader;
+    ProgressBar progressBar;
     Intent intent;
     BluetoothAdapter adapter;
     String MACaddress="";
@@ -84,9 +87,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(MainActivity.this, "Granted...", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(MainActivity.this, "Denayed...", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -134,8 +135,11 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         }
         playPause=findViewById(R.id.playpause);
         tashieLoader=findViewById(R.id.tashieLoaderID);
+        progressBar = findViewById(R.id.progressBarID);
         titleTxt=findViewById(R.id.titleTxt);
-        connectedDeviceImg = findViewById(R.id.CDimgID);
+        progressBar.setVisibility(View.VISIBLE);
+        titleTxt.setText("Device is being connected");
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.RECORD_AUDIO},1);
         }
@@ -164,12 +168,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             }
         });
 
-        connectedDeviceImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this,ConnectedDevice.class));
-            }
-        });
+
 
 
         speechRecognizerl.setRecognitionListener(new RecognitionListener() {
@@ -212,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             public void onResults(Bundle bundle) {
                 String data = bundle.getStringArrayList(speechRecognizerl.RESULTS_RECOGNITION).get(0);
                 message=String.format("*%s#", data);
-                titleTxt.setText(data);
+
                 try {
                     if (outputStream != null) {
                         outputStream.write(message.getBytes());
@@ -234,10 +233,12 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
             }
         });
-
-
-
-
+        if (socket != null) {
+            if (socket.isConnected()) {
+                progressBar.setVisibility(View.INVISIBLE);
+                titleTxt.setText("device connected");
+            }
+        }
 
     }
 
@@ -286,7 +287,6 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
         }
         voiceService.stopForeground(true);
-        Toast.makeText(getApplicationContext(), "dismissed", Toast.LENGTH_SHORT).show();
        myUUID=null;
          device=null;
          socket=null;
@@ -306,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         voiceService.setCallBack(MainActivity.this);
         voiceService.setCallBackBluetooth(MainActivity.this);
 
-        //titleTxt.setText(musicService.getRand());
+
 
 
 
@@ -412,12 +412,13 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
                 connectDevices();
                 pairDevices();
                 if (MACaddress != "") {
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            titleTxt.setText(MACaddress);
-//                        }
-//                    });
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            titleTxt.setText("Device is being connected");
+
+                        }
+                    });
 
                     device = adapter.getRemoteDevice(MACaddress);
                     new Thread(new Runnable() {
@@ -433,28 +434,31 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
                                      outputStream = socket.getOutputStream();
 
 
-//                                    runOnUiThread(new Runnable() {
-//                                        @Override
-//                                        public void run() {
-//                                            titleTxt.setText("socket is  connected");
-//                                        }
-//                                    });
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            titleTxt.setText("device  connected");
+                                            progressBar.setVisibility(View.INVISIBLE);
+                                        }
+                                    });
 
                                 }else {
-//                                    runOnUiThread(new Runnable() {
-//                                        @Override
-//                                        public void run() {
-//                                            titleTxt.setText("socket is not connected");
-//                                        }
-//                                    });
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            titleTxt.setText("Device is not connected");
+                                            progressBar.setVisibility(View.INVISIBLE);
+                                        }
+                                    });
                                 }
                             } catch (IOException e) {
-//                                runOnUiThread(new Runnable() {
-//                                    @Override
-//                                    public void run() {
-//                                        titleTxt.setText(e.toString());
-//                                    }
-//                                });
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        titleTxt.setText("Failed to connect. Get back and try again");
+                                        progressBar.setVisibility(View.INVISIBLE);
+                                    }
+                                });
 
                             }
                         }
@@ -494,6 +498,11 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
                 if (socket.isConnected()) {
                     try {
                         socket.close();
+                        myUUID=null;
+                        device=null;
+                        socket=null;
+                        outputStream=null;
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
