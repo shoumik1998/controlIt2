@@ -3,6 +3,7 @@ package com.example.player;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.widget.Toast;
 
 public class NotificationReceiver extends BroadcastReceiver {
     public static final String ACTION_PLAY="PLAY";
@@ -16,6 +17,7 @@ public class NotificationReceiver extends BroadcastReceiver {
                 case ACTION_PLAY:
                     intent1.putExtra("myActionName",intent.getAction());
                     context.startService(intent1);
+
                     break;
 
                 case ACTION_DISMISS:

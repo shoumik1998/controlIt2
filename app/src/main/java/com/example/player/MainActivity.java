@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -103,8 +104,9 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         adapter=BluetoothAdapter.getDefaultAdapter();
         myUUID=UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-        Paper.init(this);
+        Paper.init(MainActivity.this);
         if (Paper.book().contains("mcaddress")) {
+
             if (Paper.book().read("mcaddress") == "") {
 
             }
@@ -113,20 +115,25 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
         }
         if (Paper.book().contains("serviceOn")) {
+
             if (Paper.book().read("serviceOn").equals("") || Paper.book().read("serviceOn").equals(null)) {
                 Paper.book().write("serviceOn", "off");
 
+
+            }else {
+                Toast.makeText(MainActivity.this, Paper.book().read("serviceOn").toString(), Toast.LENGTH_SHORT).show();
             }
         } else {
             Paper.book().write("serviceOn", "off");
-
 
         }
 
         intent=new Intent(getApplicationContext(),VoiceService.class);
 
+
         if (Paper.book().read("serviceOn").equals("off")) {
             if (socket == null) {
+
                 if (adapter.isEnabled()) {
                     socketConnection();
                 } else {
@@ -135,6 +142,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
                 }
             }
         } else {
+
         }
         playPause=findViewById(R.id.playpause);
         tashieLoader=findViewById(R.id.tashieLoaderID);
@@ -149,8 +157,8 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
         speechRecognizerl=SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
          spechrecognzerIntent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+//        spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+//        spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
 
 
 
@@ -275,11 +283,13 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
     @Override
     public void playClickedNotification() {
-        isPlaying=true;
         speechRecognizerl.startListening(spechrecognzerIntent);
+        isPlaying=true;
+
         playPause.setImageResource(R.drawable.mic1);
         showNotification(R.drawable.mic_off_24);
         tashieLoader.setVisibility(View.VISIBLE);
+        Toast.makeText(getApplicationContext(), "notification", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -302,6 +312,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
          socket=null;
          outputStream=null;
          finish();
+
 
     }
 
@@ -350,27 +361,28 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
                 R.drawable.arduino);
 
 
+        NotificationCompat.Builder notificationBldr= null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            notificationBldr = new NotificationCompat.Builder(getApplicationContext(),CHANNEL_ID_2)
+                     .setSmallIcon(R.drawable.arduino)
+                     .setLargeIcon(picture)
+                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                     .setContentTitle("Control It")
+                     .setContentText("Control your equipments")
+                     .setColor(getResources().getColor(R.color.black))
+                     .addAction(playpauseBtn,"Listen",playpendingIntent)
+                     .addAction(R.drawable.close,"Dismiss",closependingIntent)
+                     //.setStyle(new Notification.MediaStyle()
+                     //.setMediaSession(mediaSessionCompat.getSessionToken()))
+                     .setPriority(NotificationCompat.PRIORITY_HIGH)
+                     .setContentIntent(contentinten)
+                     .setAutoCancel(true);
+        }
 
-       NotificationCompat.Builder notificationBldr=new NotificationCompat.Builder(getApplicationContext(),CHANNEL_ID_2)
-                .setSmallIcon(R.drawable.arduino)
-                .setLargeIcon(picture)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setContentTitle("Control It")
-                .setContentText("Control your equipments")
-                .setColor(getResources().getColor(R.color.black))
-                .addAction(playpauseBtn,"Listen",playpendingIntent)
-                .addAction(R.drawable.close,"Dismiss",closependingIntent)
-                //.setStyle(new androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle()
-                //.setMediaSession(mediaSessionCompat.getSessionToken()))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(contentinten)
-                .setAutoCancel(true);
 
-
-
-
-
-        voiceService.startForeground(1,notificationBldr.build());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            voiceService.startForeground(1,notificationBldr.build(),ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
+        }
 
     }
 
