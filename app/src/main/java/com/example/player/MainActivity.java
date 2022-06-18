@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
@@ -27,6 +28,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -50,6 +52,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -63,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
     boolean isPlaying=false;
     VoiceService voiceService;
     MediaSessionCompat mediaSessionCompat;
-    SpeechRecognizer speechRecognizerl;
+    SpeechRecognizer speechRecognizerl=null;
     Intent spechrecognzerIntent;
     TashieLoader tashieLoader;
     ProgressBar progressBar;
@@ -144,8 +147,10 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.RECORD_AUDIO},1);
         }
 
-        speechRecognizerl=SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizerl=SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
          spechrecognzerIntent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
 
 
 
@@ -158,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
             @Override
             public void onClick(View view) {
+//
 
                 if (Paper.book().read("serviceOn").equals("off")) {
                     intent.putExtra("myActionName", "START_R");
@@ -165,6 +171,8 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
                     Paper.book().write("serviceOn", "on");
                 }
                 playClicked();
+
+
             }
         });
 
@@ -179,6 +187,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
             @Override
             public void onBeginningOfSpeech() {
+
 
             }
 
@@ -196,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             public void onEndOfSpeech() {
                 tashieLoader.setVisibility(View.INVISIBLE);
                 showNotification(R.drawable.mic_24);
-                isPlaying=true;
+                isPlaying=false;
 
 
 
@@ -211,6 +220,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             public void onResults(Bundle bundle) {
                 String data = bundle.getStringArrayList(speechRecognizerl.RESULTS_RECOGNITION).get(0);
                 message=String.format("*%s#", data);
+                Toast.makeText(getApplicationContext(), data, Toast.LENGTH_SHORT).show();
 
                 try {
                     if (outputStream != null) {
@@ -254,12 +264,12 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
     @Override
     public void playClicked() {
-
+        speechRecognizerl.startListening(spechrecognzerIntent);
             isPlaying=true;
-            speechRecognizerl.startListening(spechrecognzerIntent);
+        tashieLoader.setVisibility(View.VISIBLE);
             playPause.setImageResource(R.drawable.mic1);
-            showNotification(R.drawable.mic_24);
-            tashieLoader.setVisibility(View.VISIBLE);
+           showNotification(R.drawable.mic_24);
+
 
     }
 
@@ -326,7 +336,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
         Intent playintent=new Intent(this,NotificationReceiver.class)
                 .setAction(ACTION_PLAY);
-        PendingIntent playpendingIntent=PendingIntent.getBroadcast(this,0,playintent,
+        PendingIntent playpendingIntent=PendingIntent.getBroadcast(this,1,playintent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
 Intent closeintent=new Intent(this,NotificationReceiver.class)
@@ -339,23 +349,29 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
         Bitmap picture= BitmapFactory.decodeResource(getResources(),
                 R.drawable.arduino);
 
-       Notification notification=new NotificationCompat.Builder(this,CHANNEL_ID_2)
+
+
+       NotificationCompat.Builder notificationBldr=new NotificationCompat.Builder(getApplicationContext(),CHANNEL_ID_2)
                 .setSmallIcon(R.drawable.arduino)
                 .setLargeIcon(picture)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentTitle("Control It")
                 .setContentText("Control your equipments")
                 .setColor(getResources().getColor(R.color.black))
-                .addAction(playpauseBtn,"Play",playpendingIntent)
+                .addAction(playpauseBtn,"Listen",playpendingIntent)
                 .addAction(R.drawable.close,"Dismiss",closependingIntent)
-                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSessionCompat.getSessionToken()))
+                //.setStyle(new androidx.media.app.NotificationCompat.DecoratedMediaCustomViewStyle()
+                //.setMediaSession(mediaSessionCompat.getSessionToken()))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(contentinten)
-                .setOnlyAlertOnce(true)
-                .build();
+                .setAutoCancel(true);
 
-        voiceService.startForeground(1,notification);
+
+
+
+
+        voiceService.startForeground(1,notificationBldr.build());
+
     }
 
     @Override
