@@ -40,7 +40,7 @@ public class ApplicationClass extends Application {
             NotificationManager notificationManager=getSystemService(NotificationManager.class);
 
             notificationManager.createNotificationChannel(notificationChannel2);
-            Toast.makeText(getApplicationContext(), "Channel created", Toast.LENGTH_SHORT).show();
+
 
         }
     }

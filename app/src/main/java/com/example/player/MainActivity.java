@@ -37,6 +37,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.RecognizerResultsIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
 
 
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
@@ -121,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
 
             }else {
-                Toast.makeText(MainActivity.this, Paper.book().read("serviceOn").toString(), Toast.LENGTH_SHORT).show();
+
             }
         } else {
             Paper.book().write("serviceOn", "off");
@@ -156,7 +158,10 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         }
 
         speechRecognizerl=SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
-         spechrecognzerIntent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+
+        spechrecognzerIntent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+         spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,4000);
+         spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS,5000);
 //        spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 //        spechrecognzerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
 
@@ -172,13 +177,13 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             @Override
             public void onClick(View view) {
 //
-
+                playClicked();
                 if (Paper.book().read("serviceOn").equals("off")) {
                     intent.putExtra("myActionName", "START_R");
                     ContextCompat.startForegroundService(MainActivity.this,intent);
                     Paper.book().write("serviceOn", "on");
                 }
-                playClicked();
+
 
 
             }
@@ -204,6 +209,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
             }
 
+
             @Override
             public void onBufferReceived(byte[] bytes) {
 
@@ -221,6 +227,11 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
 
             @Override
             public void onError(int i) {
+                tashieLoader.setVisibility(View.INVISIBLE);
+                if (i==SpeechRecognizer.ERROR_SPEECH_TIMEOUT) {
+                    tashieLoader.setVisibility(View.INVISIBLE);
+                }
+
 
             }
 
@@ -228,7 +239,8 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             public void onResults(Bundle bundle) {
                 String data = bundle.getStringArrayList(speechRecognizerl.RESULTS_RECOGNITION).get(0);
                 message=String.format("*%s#", data);
-                Toast.makeText(getApplicationContext(), data, Toast.LENGTH_SHORT).show();
+                tashieLoader.setVisibility(View.INVISIBLE);
+
 
                 try {
                     if (outputStream != null) {
@@ -258,6 +270,8 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             }
         }
 
+
+
     }
 
     @Override
@@ -276,7 +290,11 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
             isPlaying=true;
         tashieLoader.setVisibility(View.VISIBLE);
             playPause.setImageResource(R.drawable.mic1);
-           showNotification(R.drawable.mic_24);
+        if (Paper.book().read("serviceOn").equals("off")) {
+            showNotification(R.drawable.mic_24);
+        }
+
+
 
 
     }
@@ -289,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying , S
         playPause.setImageResource(R.drawable.mic1);
         showNotification(R.drawable.mic_off_24);
         tashieLoader.setVisibility(View.VISIBLE);
-        Toast.makeText(getApplicationContext(), "notification", Toast.LENGTH_SHORT).show();
+
 
     }
 
@@ -367,8 +385,7 @@ Intent closeintent=new Intent(this,NotificationReceiver.class)
                      .setSmallIcon(R.drawable.arduino)
                      .setLargeIcon(picture)
                      .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                     .setContentTitle("Control It")
-                     .setContentText("Control your equipments")
+                     .setContentTitle("Control your E-equipments")
                      .setColor(getResources().getColor(R.color.black))
                      .addAction(playpauseBtn,"Listen",playpendingIntent)
                      .addAction(R.drawable.close,"Dismiss",closependingIntent)
