@@ -16,7 +16,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:textSize="18dp"
-            android:text="Control Your Home E-equipments"
+            android:text="Control your home E-equipments"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
