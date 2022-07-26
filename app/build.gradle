@@ -1,20 +1,16 @@
 plugins {
     id 'com.android.application'
 }
-
 android {
     compileSdk 31
-
     defaultConfig {
         applicationId "com.example.player"
         minSdk 18
-        targetSdk 32
+        targetSdk 31
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -26,13 +22,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
-
 dependencies {
     implementation "androidx.core:core:1.6.0"
     implementation "androidx.cardview:cardview:1.0.0"
     implementation 'com.agrawalsuneet.androidlibs:dotsloader:1.4'
     implementation 'io.github.pilgr:paperdb:2.7.2'
-
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'

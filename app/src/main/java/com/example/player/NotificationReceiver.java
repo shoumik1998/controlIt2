@@ -17,16 +17,12 @@ public class NotificationReceiver extends BroadcastReceiver {
                 case ACTION_PLAY:
                     intent1.putExtra("myActionName",intent.getAction());
                     context.startService(intent1);
-
                     break;
-
                 case ACTION_DISMISS:
                     intent1.putExtra("myActionName",intent.getAction());
                     context.startService(intent1);
                     break;
-
             }
         }
-
     }
 }

@@ -3,62 +3,66 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:orientation="vertical"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
+
     <LinearLayout
-        android:gravity="center"
-        android:orientation="horizontal"
+
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:textSize="18dp"
             android:text="Control your home E-equipments"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-
-
+            android:textSize="18dp" />
 
     </LinearLayout>
 
-
-
-
     <LinearLayout
-        android:orientation="vertical"
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:orientation="vertical">
 
         <LinearLayout
-            android:layout_marginTop="30dp"
-            android:orientation="vertical"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:orientation="vertical">
+
             <TextView
                 android:id="@+id/titleTxt"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                 />
+
 
             <ProgressBar
-                android:foregroundGravity="center"
                 android:id="@+id/progressBarID"
-                android:layout_gravity="center"
                 android:layout_width="20dp"
-                android:layout_height="20dp"/>
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:foregroundGravity="center"
+                android:outlineAmbientShadowColor="@color/white" />
+
+
 
         </LinearLayout>
+
         <com.agrawalsuneet.dotsloader.loaders.TashieLoader
-            android:layout_marginTop="150dp"
             android:id="@+id/tashieLoaderID"
-            android:visibility="invisible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="150dp"
+            android:visibility="invisible"
             app:tashieloader_animDelay="60"
             app:tashieloader_animDur="300"
             app:tashieloader_dotsColor="#ff00"
@@ -68,25 +72,18 @@
             app:tashieloader_noOfDots="4" />
 
 
-
-
-
-
-            <ImageView
-                android:layout_marginTop="140sp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:elevation="20dp"
-                android:src="@drawable/mic1"
-                android:id="@+id/playpause"
-                android:layout_width="150dp"
-                android:layout_height="150dp"/>
-
+        <ImageView
+            android:id="@+id/playpause"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_marginTop="140sp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:elevation="20dp"
+            android:src="@drawable/mic1" />
 
 
     </LinearLayout>
-
-
 
 
 </LinearLayout>
