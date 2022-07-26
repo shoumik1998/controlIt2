@@ -99,10 +99,16 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
         if (Paper.book().contains("serviceOn")) {
             if (Paper.book().read("serviceOn").equals("") || Paper.book().read("serviceOn").equals(null)) {
                 Paper.book().write("serviceOn", "off");
-            } else {
             }
         } else {
             Paper.book().write("serviceOn", "off");
+        }
+        if (Paper.book().contains("notification_status")) {
+            if (Paper.book().read("notification_status").equals("") || Paper.book().read("notification_status").equals(null)) {
+                Paper.book().write("notification_status", "off");
+            }
+        } else {
+            Paper.book().write("notification_status", "off");
         }
 
         intent = new Intent(getApplicationContext(), VoiceService.class);
@@ -231,11 +237,12 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
         playPause.setImageResource(R.drawable.mic1);
         showNotification(R.drawable.mic_off_24);
         tashieLoader.setVisibility(View.VISIBLE);
-        Toast.makeText(getApplicationContext(), "notification", Toast.LENGTH_SHORT).show();
+
     }
 
     @Override
     public void closeService() {
+        Paper.book().write("notification_status","off");
         Paper.book().write("serviceOn", "off");
         if (socket != null) {
             if (socket.isConnected()) {
@@ -288,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
                     .setSmallIcon(R.drawable.arduino)
                     .setLargeIcon(picture)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                    .setContentTitle("Control Your Home  E-equipments")
+                    .setContentTitle("Control Your Home E-equipments")
                     .setColor(getResources().getColor(R.color.black))
                     .addAction(playpauseBtn, "Listen", playpendingIntent)
                     .addAction(R.drawable.close, "Dismiss", closependingIntent)
@@ -297,11 +304,15 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
                     .setAutoCancel(true);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            voiceService.startForeground(1, notificationBldr.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
-        } else {
-            voiceService.startForeground(1,notificationBldr.build());
+        if (Paper.book().read("notification_status").equals("off")) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                voiceService.startForeground(1, notificationBldr.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
+            } else {
+                voiceService.startForeground(1,notificationBldr.build());
+            }
+            Paper.book().write("notification_status","on");
         }
+
 
     }
 
