@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -26,13 +27,16 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
     public static BluetoothDevice device;
     public static BluetoothSocket socket;
     public static OutputStream outputStream;
-    ImageView playPause;
+    ImageView playPause,add_device;
     TextView titleTxt;
     int position;
     boolean isPlaying = false;
@@ -96,6 +100,14 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
         } else {
             Paper.book().write("mcaddress", "");
         }
+        if (Paper.book().contains("device_name")) {
+            if (Paper.book().read("device_name") == "") {
+                onDialogOpen();
+            }
+        } else {
+            Paper.book().write("device_name", "");
+            onDialogOpen();
+        }
         if (Paper.book().contains("serviceOn")) {
             if (Paper.book().read("serviceOn").equals("") || Paper.book().read("serviceOn").equals(null)) {
                 Paper.book().write("serviceOn", "off");
@@ -125,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
         }
 
         playPause = findViewById(R.id.playpause);
+        add_device = findViewById(R.id.device_nameID);
         tashieLoader = findViewById(R.id.tashieLoaderID);
         progressBar = findViewById(R.id.progressBarID);
         titleTxt = findViewById(R.id.titleTxt);
@@ -140,6 +153,14 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
         spechrecognzerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 
         mediaSessionCompat = new MediaSessionCompat(this, "PlayerAudio");
+
+        add_device.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onDialogOpen();
+
+            }
+        });
 
         playPause.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -218,6 +239,32 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
         Intent intent = new Intent(this, VoiceService.class);
         bindService(intent, this, BIND_AUTO_CREATE);
 
+    }
+
+    private  void onDialogOpen(){
+        View view1 = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_layout, null);
+        AlertDialog save_dialog=new AlertDialog.Builder(MainActivity.this)
+                .setView(view1)
+                .setPositiveButton(null,null)
+                .setNegativeButton(null, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                }).show();
+
+        EditText device_name=view1.findViewById(R.id.edit_device_nameID);
+        view1.findViewById(R.id.button_save_device_nameID).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String device_nameStr = device_name.getText().toString();
+                Paper.book().write("device_name", device_nameStr);
+                save_dialog.dismiss();
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            }
+        });
     }
 
 
@@ -322,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
         Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
-                if (device.getName().equals("HC-05")) {
+                if (device.getName().equals(Paper.book().read("device_name"))) {
                     MACaddress = device.getAddress();
                     Paper.book().write("mcaddress", MACaddress);
                 }
@@ -339,7 +386,7 @@ public class MainActivity extends AppCompatActivity implements ActionPlaying, Se
                 String action = intent.getAction();
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    if (device.getName().equals("HC-05")) {
+                    if (device.getName().equals(Paper.book().read("device_name"))) {
                         MACaddress = device.getAddress();
                         Paper.book().write("mcaddress", MACaddress);
                         adapter.cancelDiscovery();
